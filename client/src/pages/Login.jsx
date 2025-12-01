@@ -1,104 +1,76 @@
-import React from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
-function Login() {
-  const handleLogin = () => {
-    const email = document.querySelector("#login-email").value.trim();
-    const pass = document.querySelector("#login-pass").value.trim();
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-    if (!email || !pass) {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Details",
-        text: "Please enter your email and password.",
-        confirmButtonColor: "#4c6ef5",
-      });
-      return;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      return Swal.fire("Missing Details", "Please fill all fields.", "warning");
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "Login Successful",
-      text: "Welcome back!",
-      confirmButtonColor: "#4c6ef5",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        Swal.fire("Welcome", "Login successful!", "success");
+        navigate("/app/dashboard");
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    } catch (error) {
+      Swal.fire("Server Error", "Something went wrong!", "error");
+    }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg-light)",
-        padding: "20px",
-      }}
-    >
-      <div
-        className="ts-card"
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          padding: "32px",
-          borderRadius: "20px",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 25 }}>
-          <div className="ts-logo" style={{ justifyContent: "center" }}>
-            <div className="ts-logo-mark">TS</div>
-            <span>TeamSync Pro</span>
-          </div>
-          <p style={{ marginTop: 10, color: "var(--text-muted)" }}>
-            Login to continue
-          </p>
-        </div>
+    <div className="container mt-5" style={{ maxWidth: "500px" }}>
+      <h2 className="text-center mb-4">Login</h2>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          className="form-control mb-3"
+          placeholder="Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 14, fontWeight: 500 }}>Email</label>
-          <input
-            id="login-email"
-            type="email"
-            className="form-control"
-            placeholder="Enter your email"
-            style={{ marginTop: 6 }}
-          />
-        </div>
+        <input
+          type="password"
+          className="form-control mb-3"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-        <div style={{ marginBottom: 22 }}>
-          <label style={{ fontSize: 14, fontWeight: 500 }}>Password</label>
-          <input
-            id="login-pass"
-            type="password"
-            className="form-control"
-            placeholder="Enter password"
-            style={{ marginTop: 6 }}
-          />
-        </div>
+        <button className="btn btn-primary w-100">Login</button>
 
-        <button className="btn btn-primary w-100" onClick={handleLogin}>
-          Login
-        </button>
-
-        <p
-          style={{
-            marginTop: 15,
-            textAlign: "center",
-            fontSize: 14,
-            color: "var(--text-muted)",
-          }}
-        >
-          Don't have an account?{" "}
+        <p className="text-center mt-3">
+          Don’t have an account?
           <span
-            style={{ color: "var(--primary)", cursor: "pointer" }}
-            onClick={() => (window.location.href = "/signup")}
+            style={{ cursor: "pointer", color: "blue" }}
+            onClick={() => navigate("/signup")}
           >
+            {" "}
             Sign up
           </span>
         </p>
-      </div>
+      </form>
     </div>
   );
 }
-
-export default Login;

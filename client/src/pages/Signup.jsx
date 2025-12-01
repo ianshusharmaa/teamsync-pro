@@ -1,147 +1,117 @@
-import React from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
-function Signup() {
-  const handleSignup = () => {
-    const name = document.querySelector("#signup-name").value.trim();
-    const email = document.querySelector("#signup-email").value.trim();
-    const pass = document.querySelector("#signup-pass").value.trim();
-    const terms = document.querySelector("#signup-terms").checked;
+export default function Signup() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const navigate = useNavigate();
 
-    if (!name || !email || !pass) {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Details",
-        text: "Please fill all fields before continuing.",
-        confirmButtonColor: "#4c6ef5",
-      });
-      return;
+  const handleSignup = async (e) => {
+    e.preventDefault();
+
+    if (!fullName || !email || !password) {
+      return Swal.fire("Missing Details", "Please fill all fields.", "warning");
     }
 
-    if (!terms) {
-      Swal.fire({
-        icon: "info",
-        title: "Accept Terms",
-        text: "You must accept the Terms & Conditions and Privacy Policy.",
-        confirmButtonColor: "#4c6ef5",
-      });
-      return;
+    if (!acceptTerms) {
+      return Swal.fire(
+        "Terms Required",
+        "Please accept Terms & Conditions.",
+        "warning"
+      );
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "Account Created!",
-      text: "Welcome to TeamSync Pro.",
-      confirmButtonColor: "#4c6ef5",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Swal.fire("Success", "Account created successfully!", "success");
+        navigate("/");
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    } catch (error) {
+      Swal.fire("Server Error", "Something went wrong!", "error");
+    }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg-light)",
-        padding: "20px",
-      }}
-    >
-      <div
-        className="ts-card"
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          padding: "32px",
-          borderRadius: "20px",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 25 }}>
-          <div className="ts-logo" style={{ justifyContent: "center" }}>
-            <div className="ts-logo-mark">TS</div>
-            <span>TeamSync Pro</span>
-          </div>
-          <p style={{ marginTop: 10, color: "var(--text-muted)" }}>
-            Create your account
-          </p>
-        </div>
+    <div className="container mt-5" style={{ maxWidth: "500px" }}>
+      <h2 className="text-center mb-4">Create Account</h2>
 
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 14, fontWeight: 500 }}>Full Name</label>
+      <form onSubmit={handleSignup}>
+        <input
+          type="text"
+          className="form-control mb-3"
+          placeholder="Full Name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+
+        <input
+          type="email"
+          className="form-control mb-3"
+          placeholder="Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          className="form-control mb-3"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <div className="form-check mb-3">
           <input
-            id="signup-name"
-            type="text"
-            className="form-control"
-            placeholder="Enter your name"
-            style={{ marginTop: 6 }}
+            className="form-check-input"
+            type="checkbox"
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
           />
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 14, fontWeight: 500 }}>Email</label>
-          <input
-            id="signup-email"
-            type="email"
-            className="form-control"
-            placeholder="Enter your email"
-            style={{ marginTop: 6 }}
-          />
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 14, fontWeight: 500 }}>Password</label>
-          <input
-            id="signup-pass"
-            type="password"
-            className="form-control"
-            placeholder="Choose a password"
-            style={{ marginTop: 6 }}
-          />
-        </div>
-
-        <div style={{ marginBottom: 20, display: "flex", gap: 8 }}>
-          <input id="signup-terms" type="checkbox" />
-          <label style={{ fontSize: 14 }}>
+          <label className="form-check-label">
             I accept the{" "}
             <span
-              style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={() => (window.location.href = "/terms")}
+              style={{ color: "blue", cursor: "pointer" }}
+              onClick={() => navigate("/terms")}
             >
               Terms & Conditions
             </span>{" "}
             and{" "}
             <span
-              style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={() => (window.location.href = "/privacy")}
+              style={{ color: "blue", cursor: "pointer" }}
+              onClick={() => navigate("/privacy")}
             >
               Privacy Policy
             </span>
           </label>
         </div>
 
-        <button className="btn btn-primary w-100" onClick={handleSignup}>
-          Create Account
-        </button>
+        <button className="btn btn-primary w-100">Create Account</button>
 
-        <p
-          style={{
-            marginTop: 15,
-            textAlign: "center",
-            fontSize: 14,
-            color: "var(--text-muted)",
-          }}
-        >
-          Already have an account?{" "}
+        <p className="text-center mt-3">
+          Already have an account?
           <span
-            style={{ color: "var(--primary)", cursor: "pointer" }}
-            onClick={() => (window.location.href = "/")}
+            style={{ cursor: "pointer", color: "blue" }}
+            onClick={() => navigate("/")}
           >
+            {" "}
             Login
           </span>
         </p>
-      </div>
+      </form>
     </div>
   );
 }
-
-export default Signup;
