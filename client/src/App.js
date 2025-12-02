@@ -5,6 +5,9 @@ import Signup from "./pages/Signup";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import MainLayout from "./layouts/MainLayout";
+import VerifyEmail from "./pages/VerifyEmail";
+import VerifyLink from "./pages/VerifyLink";
+
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
 
         {/* Protected pages will later use real auth */}
         <Route path="/app" element={<MainLayout />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify-email/:token" element={<VerifyLink />} />
+
       </Routes>
     </BrowserRouter>
   );

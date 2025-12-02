@@ -34,13 +34,16 @@ export default function Signup() {
 
       const data = await response.json();
 
+      console.log("Signup response:", data);
+
       if (data.success) {
-        Swal.fire("Success", "Account created successfully!", "success");
-        navigate("/");
+        Swal.fire("Success", data.message, "success");
+        navigate("/verify-email");
       } else {
         Swal.fire("Error", data.message, "error");
       }
     } catch (error) {
+      console.error("Signup error:", error);
       Swal.fire("Server Error", "Something went wrong!", "error");
     }
   };
@@ -81,6 +84,7 @@ export default function Signup() {
             checked={acceptTerms}
             onChange={(e) => setAcceptTerms(e.target.checked)}
           />
+
           <label className="form-check-label">
             I accept the{" "}
             <span
@@ -100,17 +104,6 @@ export default function Signup() {
         </div>
 
         <button className="btn btn-primary w-100">Create Account</button>
-
-        <p className="text-center mt-3">
-          Already have an account?
-          <span
-            style={{ cursor: "pointer", color: "blue" }}
-            onClick={() => navigate("/")}
-          >
-            {" "}
-            Login
-          </span>
-        </p>
       </form>
     </div>
   );
