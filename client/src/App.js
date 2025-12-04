@@ -21,7 +21,9 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
 
         {/* Protected pages will later use real auth */}
+        {/* <Route path="/app" element={<MainLayout />} /> */}
         <Route path="/app" element={<MainLayout />} />
+        <Route path="/app/dashboard" element={<MainLayout />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify-email/:token" element={<VerifyLink />} />
 
