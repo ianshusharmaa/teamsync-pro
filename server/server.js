@@ -3,12 +3,15 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import teamRoutes from "./routes/team.js";
+import authMiddleware from "./middleware/auth.js";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api/team", teamRoutes);
 
 app.use("/api/auth", authRoutes);
 

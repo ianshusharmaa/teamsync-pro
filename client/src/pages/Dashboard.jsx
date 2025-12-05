@@ -1,4 +1,6 @@
+import Swal from "sweetalert2";
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../api";
 
 function Dashboard() {
   // STATES
@@ -97,11 +99,58 @@ const generateTeamCode = () => {
               </button>
 
               <button
-                className="btn btn-success"
-                onClick={() => alert("Team Created :" + code)}
-              >
-                Create
-              </button>
+  className="btn btn-success"
+  onClick={async () => {
+    if (!teamName.trim()) {
+      Swal.fire("Error", "Team name is required", "error");
+      return;
+    }
+
+    const teamCode = generateTeamCode();
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/team/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          teamName,
+          teamDesc,
+          teamCode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire({
+          title: "Team Created 🎉",
+          html: `
+            <p><b>${teamName}</b> is now created.</p>
+            <p>Your team code:</p>
+            <div style="font-size: 20px; color: #2563eb;"><b>${teamCode}</b></div>
+          `,
+          icon: "success",
+        });
+
+        setShowCreateModal(false);
+        setTeamName("");
+        setTeamDesc("");
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    } catch (error) {
+      console.log(error);
+      Swal.fire("Error", "Server error", "error");
+    }
+  }}
+>
+  Create
+</button>
+
             </div>
           </div>
         </div>
