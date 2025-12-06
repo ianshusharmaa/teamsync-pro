@@ -4,16 +4,18 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import teamRoutes from "./routes/team.js";
-import authMiddleware from "./middleware/auth.js";
+import noticeRoutes from "./routes/notice.js";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/team", teamRoutes);
 
+// ROUTES
 app.use("/api/auth", authRoutes);
+app.use("/api/team", teamRoutes);
+app.use("/api/notice", noticeRoutes);
 
 // Default
 app.get("/", (req, res) => {

@@ -14,12 +14,24 @@ const teamSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
+    // Admin of the team
     admin: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
+    // Members list
     members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ],
+
+    // Users who requested to join the team
+    joinRequests: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
