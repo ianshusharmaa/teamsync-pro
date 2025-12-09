@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import teamRoutes from "./routes/team.js";
 import noticeRoutes from "./routes/notice.js";
+import workLogRoutes from "./routes/worklog.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/notice", noticeRoutes);
+app.use("/api/worklog", workLogRoutes);
 
 // Default
 app.get("/", (req, res) => {

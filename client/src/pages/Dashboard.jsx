@@ -3,26 +3,22 @@ import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
 function Dashboard() {
-  // STATES
+  // state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-
   const [teamName, setTeamName] = useState("");
   const [teamDesc, setTeamDesc] = useState("");
   const [joinCode, setJoinCode] = useState("");
-
   const [userName, setUserName] = useState("");
   const [myTeams, setMyTeams] = useState([]);
 
-  // LOAD USER NAME
+  // load user
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) {
-      setUserName(JSON.parse(stored).fullName);
-    }
+    if (stored) setUserName(JSON.parse(stored).fullName);
   }, []);
 
-  // FETCH MY TEAMS
+  // load teams
   useEffect(() => {
     fetchTeams();
   }, []);
@@ -30,106 +26,77 @@ function Dashboard() {
   const fetchTeams = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await fetch(`${API_BASE_URL}/api/team/my-teams`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
-      if (data.success) {
-        setMyTeams(data.teams);
-      }
-    } catch (error) {
-      console.log("Fetch teams error:", error);
+      if (data.success) setMyTeams(data.teams);
+    } catch (err) {
+      console.log(err);
     }
   };
 
-  // GENERATE CODE
+  // generate code
   const generateTeamCode = () => {
-    const prefix = "TS";
-    const randomNum = Math.floor(10000 + Math.random() * 90000);
-    return `${prefix}-${randomNum}`;
-  };
-
-  // MODAL STYLES
-  const overlayStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    background: "rgba(0,0,0,0.4)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  };
-
-  const modalStyle = {
-    width: "400px",
-    background: "white",
-    padding: "25px",
-    borderRadius: "10px",
-    boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
+    const random = Math.floor(10000 + Math.random() * 90000);
+    return `TS-${random}`;
   };
 
   return (
     <div className="container mt-4">
       <h1 className="ts-page-title">Dashboard</h1>
-      <p className="ts-page-subtitle">Overview of your team's activity.</p>
+      <p className="ts-page-subtitle">Overview of your activity</p>
 
-      {/* WELCOME CARD */}
+      {/* welcome card */}
       <div className="ts-card p-4 mt-3 shadow-sm">
-        <h2 style={{ fontFamily: "Poppins", marginBottom: 10 }}>
-          Welcome, {userName} 👋
-        </h2>
+        <h2 style={{ fontFamily: "Poppins" }}>Welcome, {userName} 👋</h2>
+        <p className="text-muted">Manage your teams and join new projects</p>
 
-        <p style={{ fontSize: 14, color: "#6b7280" }}>
-          Manage your teams, join new projects and stay updated.
-        </p>
-
-        <button className="btn btn-primary mt-3" onClick={() => setShowCreateModal(true)}>
+        <button
+          className="btn btn-primary mt-3"
+          onClick={() => setShowCreateModal(true)}
+        >
           + Create Team
         </button>
 
-        <button className="btn btn-outline-primary mt-3 ms-2" onClick={() => setShowJoinModal(false) || setShowJoinModal(true)}>
+        <button
+          className="btn btn-outline-primary mt-3 ms-2"
+          onClick={() => setShowJoinModal(true)}
+        >
           + Join Team
         </button>
       </div>
 
-      {/* MY TEAMS LIST */}
+      {/* team list */}
       <div className="ts-card p-4 mt-4 shadow-sm">
         <h4>Your Teams ({myTeams.length})</h4>
 
         {myTeams.length === 0 ? (
-          <p className="text-muted mt-2">You are not part of any teams yet.</p>
+          <p className="text-muted mt-2">No teams yet.</p>
         ) : (
           <ul className="mt-3">
             {myTeams.map((team) => (
               <li
-  key={team._id}
-  style={{ marginBottom: 8, cursor: "pointer" }}
-  onClick={() => {
-    localStorage.setItem("selectedTeamId", team._id);
-    window.dispatchEvent(new Event("openTeamDetails"));
-  }}
->
-  <b>{team.teamName}</b> — 
-  <span style={{ color: "#2563eb" }}>{team.teamCode}</span>
-</li>
-
+                key={team._id}
+                style={{ cursor: "pointer", marginBottom: 8 }}
+                onClick={() => {
+                  localStorage.setItem("selectedTeamId", team._id);
+                  window.dispatchEvent(new Event("openTeamDetails"));
+                }}
+              >
+                <b>{team.teamName}</b> —{" "}
+                <span style={{ color: "#2563eb" }}>{team.teamCode}</span>
+              </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* CREATE TEAM MODAL */}
+      {/* create team modal */}
       {showCreateModal && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h4 className="mb-3">Create Team</h4>
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h4>Create Team</h4>
 
             <input
               type="text"
@@ -148,7 +115,10 @@ function Dashboard() {
             />
 
             <div className="d-flex justify-content-end gap-2">
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
                 Cancel
               </button>
 
@@ -156,11 +126,11 @@ function Dashboard() {
                 className="btn btn-success"
                 onClick={async () => {
                   if (!teamName.trim()) {
-                    Swal.fire("Error", "Team name is required", "error");
+                    Swal.fire("Error", "Team name required", "error");
                     return;
                   }
 
-                  const teamCode = generateTeamCode();
+                  const code = generateTeamCode();
                   const token = localStorage.getItem("token");
 
                   try {
@@ -173,20 +143,18 @@ function Dashboard() {
                       body: JSON.stringify({
                         teamName,
                         teamDesc,
-                        teamCode,
+                        teamCode: code,
                       }),
                     });
 
                     const data = await res.json();
 
                     if (data.success) {
-                      Swal.fire({
-                        title: "Team Created 🎉",
-                        html: `<b>${teamName}</b> created successfully.<br/><br/>
-                               Team Code:<br/><div style="font-size:20px;color:#2563eb">${teamCode}</div>`,
-                        icon: "success",
-                      });
-
+                      Swal.fire(
+                        "Team Created 🎉",
+                        `Team Code: ${code}`,
+                        "success"
+                      );
                       setShowCreateModal(false);
                       setTeamName("");
                       setTeamDesc("");
@@ -194,7 +162,7 @@ function Dashboard() {
                     } else {
                       Swal.fire("Error", data.message, "error");
                     }
-                  } catch (error) {
+                  } catch (err) {
                     Swal.fire("Error", "Server error", "error");
                   }
                 }}
@@ -206,11 +174,11 @@ function Dashboard() {
         </div>
       )}
 
-      {/* JOIN TEAM MODAL */}
+      {/* join team modal */}
       {showJoinModal && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h4 className="mb-3">Join a Team</h4>
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h4>Join Team</h4>
 
             <input
               type="text"
@@ -221,7 +189,10 @@ function Dashboard() {
             />
 
             <div className="d-flex justify-content-end gap-2">
-              <button className="btn btn-secondary" onClick={() => setShowJoinModal(false)}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowJoinModal(false)}
+              >
                 Cancel
               </button>
 
@@ -229,7 +200,7 @@ function Dashboard() {
                 className="btn btn-primary"
                 onClick={async () => {
                   if (!joinCode.trim()) {
-                    Swal.fire("Error", "Please enter a team code", "error");
+                    Swal.fire("Error", "Team code required", "error");
                     return;
                   }
 
@@ -254,7 +225,7 @@ function Dashboard() {
                     } else {
                       Swal.fire("Error", data.message, "error");
                     }
-                  } catch (error) {
+                  } catch (err) {
                     Swal.fire("Error", "Server error", "error");
                   }
                 }}
