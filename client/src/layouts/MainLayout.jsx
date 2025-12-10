@@ -6,88 +6,84 @@ import CalendarPage from "../pages/CalendarPage";
 import TeamAdmin from "../pages/TeamAdmin";
 import TeamDetails from "../pages/TeamDetails";
 import WorkLog from "../pages/WorkLog";
-import { API_BASE_URL } from "../api";
+import ChatPage from "../pages/ChatPage";
+import Swal from "sweetalert2";
 
 function MainLayout() {
-  // states
   const [activePage, setActivePage] = useState("dashboard");
   const [selectedTeamId, setSelectedTeamId] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // listen to openTeamDetails event
+  // load selected team from localStorage + listen to dashboard event
   useEffect(() => {
-    const openEvent = () => {
+    const saved = localStorage.getItem("selectedTeamId");
+    if (saved) setSelectedTeamId(saved);
+
+    const openTeamEvent = () => {
       const id = localStorage.getItem("selectedTeamId");
       if (id) {
         setSelectedTeamId(id);
         setActivePage("teamDetails");
-        checkAdminStatus(id);
       }
     };
 
-    window.addEventListener("openTeamDetails", openEvent);
-    return () => window.removeEventListener("openTeamDetails", openEvent);
+    window.addEventListener("openTeamDetails", openTeamEvent);
+    return () => window.removeEventListener("openTeamDetails", openTeamEvent);
   }, []);
 
-  // check if user is team admin
-  const checkAdminStatus = async (teamId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/team/${teamId}/requests`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      if (data.success) setIsAdmin(data.isAdmin);
-    } catch (err) {
-      console.log("Admin check error:", err);
-    }
-  };
-
-  // handle sidebar selection
+  // handle sidebar click
   const handleSelect = (page) => {
-    setActivePage(page);
-
-    // If worklog clicked → check admin status
-    if (page === "worklog" && selectedTeamId) {
-      checkAdminStatus(selectedTeamId);
+    if (
+      (page === "teamDetails" || page === "chat" || page === "worklog") &&
+      !selectedTeamId
+    ) {
+      Swal.fire(
+        "Select a team",
+        "Go to Dashboard and click on a team first.",
+        "info"
+      );
+      setActivePage("dashboard");
+      return;
     }
+    setActivePage(page);
   };
 
   return (
     <div className="app-root">
       <Navbar />
 
-      <div className="ts-layout" style={{ display: "flex" }}>
-        {/* sidebar */}
+      <div style={{ display: "flex" }}>
         <Sidebar activeItem={activePage} onSelect={handleSelect} />
 
-        {/* main content */}
-        <main
-          className="ts-main"
-          style={{ flexGrow: 1, padding: "24px", background: "#f3f4f6" }}
-        >
+        <main style={{ flexGrow: 1, padding: "24px", background: "#F3F4F6" }}>
           {activePage === "dashboard" && <Dashboard />}
+
           {activePage === "calendar" && <CalendarPage />}
-          {activePage === "admin" && <TeamAdmin />}
+
+          {activePage === "admin" && (
+            <TeamAdmin teamId={selectedTeamId} />
+          )}
+
           {activePage === "teamDetails" && (
             <TeamDetails teamId={selectedTeamId} />
           )}
 
-          {/* work log page */}
           {activePage === "worklog" && (
-            <WorkLog teamId={selectedTeamId} isAdmin={isAdmin} />
+            <WorkLog teamId={selectedTeamId} />
           )}
 
-          {/* fallback */}
+          {activePage === "chat" && (
+            <ChatPage teamId={selectedTeamId} />
+          )}
+
           {activePage !== "dashboard" &&
             activePage !== "calendar" &&
             activePage !== "admin" &&
             activePage !== "teamDetails" &&
-            activePage !== "worklog" && (
+            activePage !== "worklog" &&
+            activePage !== "chat" && (
               <div className="ts-card p-4">
-                <h2 className="ts-page-title">{activePage}</h2>
-                <p className="ts-page-subtitle">Page coming soon.</p>
+                <h3>{activePage}</h3>
+                <p>Page coming soon</p>
               </div>
             )}
         </main>

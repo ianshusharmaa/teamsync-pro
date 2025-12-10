@@ -1,58 +1,45 @@
 import React from "react";
 
 function Sidebar({ activeItem, onSelect }) {
-  const menuItems = [
+  const items = [
     { id: "dashboard", label: "Dashboard" },
     { id: "calendar", label: "Calendar" },
     { id: "admin", label: "Team Admin" },
+    { id: "teamDetails", label: "Team Details" },
+    { id: "chat", label: "Team Chat" },
+    { id: "worklog", label: "Work Logs" },
   ];
 
   return (
-    <aside
-      className="ts-sidebar d-flex flex-column"
+    <div
       style={{
-        width: "240px",
-        borderRight: "1px solid #e5e7eb",
-        padding: "16px",
-        background: "#f9fafb",
+        width: "230px",
+        background: "#F9FAFB",
+        borderRight: "1px solid #E5E7EB",
+        minHeight: "100vh",
+        padding: "20px",
       }}
     >
-      <h4
-        style={{
-          fontSize: 18,
-          fontWeight: 600,
-          marginBottom: 20,
-          paddingLeft: 4,
-        }}
-      >
-        TeamSync Pro
-      </h4>
+      <h3 style={{ marginBottom: "20px", color: "#2563EB" }}>TeamSync Pro</h3>
 
-      <nav className="nav flex-column">
-        {menuItems.map((item) => {
-          const isActive = activeItem === item.id;
-          return (
-            <button
-              key={item.id}
-              className="btn text-start mb-2"
-              onClick={() => onSelect(item.id)}
-              style={{
-                width: "100%",
-                fontSize: 14,
-                fontWeight: isActive ? 600 : 400,
-                background: isActive ? "#2563eb" : "transparent",
-                color: isActive ? "#ffffff" : "#111827",
-                borderRadius: 8,
-                padding: "8px 12px",
-                border: "none",
-              }}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
+      {items.map((item) => (
+        <div
+          key={item.id}
+          onClick={() => onSelect(item.id)}
+          style={{
+            padding: "12px 16px",
+            cursor: "pointer",
+            borderRadius: "8px",
+            marginBottom: "10px",
+            background: activeItem === item.id ? "#2563EB" : "transparent",
+            color: activeItem === item.id ? "white" : "#374151",
+            fontWeight: activeItem === item.id ? "600" : "500",
+          }}
+        >
+          {item.label}
+        </div>
+      ))}
+    </div>
   );
 }
 

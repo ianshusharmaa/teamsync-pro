@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import teamRoutes from "./routes/team.js";
 import noticeRoutes from "./routes/notice.js";
 import workLogRoutes from "./routes/worklog.js";
+import chatRoutes from "./routes/chat.js";
 
 dotenv.config();
 
@@ -13,18 +14,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+// routes
 app.use("/api/auth", authRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/notice", noticeRoutes);
 app.use("/api/worklog", workLogRoutes);
+app.use("/api/chat", chatRoutes);
 
-// Default
+// default
 app.get("/", (req, res) => {
   res.send("TeamSync Pro Backend Running");
 });
 
-// MongoDB connect
+// mongodb
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))

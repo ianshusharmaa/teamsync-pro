@@ -2,165 +2,133 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
-function WorkLog({ teamId, isAdmin }) {
-  // states
+function WorkLog() {
+  const [teamId, setTeamId] = useState("");
+  const [text, setText] = useState("");
   const [myLogs, setMyLogs] = useState([]);
-  const [allLogs, setAllLogs] = useState([]);
-  const [workText, setWorkText] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  // load logs
+  // load selected team id
   useEffect(() => {
-    if (teamId) {
-      loadMyLogs();
-      if (isAdmin) loadAllLogs();
+    const storedTeamId = localStorage.getItem("selectedTeamId");
+    if (storedTeamId) {
+      setTeamId(storedTeamId);
     }
+  }, []);
+
+  // load my logs
+  useEffect(() => {
+    if (!teamId) return;
+
+    const loadLogs = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${API_BASE_URL}/api/worklog/${teamId}/my`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.log("Worklog HTTP status:", res.status);
+          return;
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          setMyLogs(data.logs || []);
+        } else {
+          console.log("Worklog API error:", data.message);
+        }
+      } catch (err) {
+        console.log("WorkLog load error:", err);
+      }
+    };
+
+    loadLogs();
   }, [teamId]);
 
-  const headers = () => {
-    return {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-      "Content-Type": "application/json",
-    };
-  };
-
-  const loadMyLogs = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/worklog/${teamId}/my`, {
-        headers: headers(),
-      });
-
-      const data = await res.json();
-      if (data.success) setMyLogs(data.logs);
-    } catch (err) {
-      console.log(err);
+  // submit today's log
+  const handleSubmit = async () => {
+    if (!text.trim()) {
+      Swal.fire("Error", "Please write your work first", "error");
+      return;
     }
-    setLoading(false);
-  };
-
-  const loadAllLogs = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/worklog/${teamId}/all`, {
-        headers: headers(),
-      });
-
-      const data = await res.json();
-      if (data.success) setAllLogs(data.logs);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // submit work
-  const submitWork = async () => {
-    if (!workText.trim()) {
-      Swal.fire("Error", "Please enter your work update", "error");
+    if (!teamId) {
+      Swal.fire("Error", "Please select a team first", "error");
       return;
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/api/worklog/${teamId}`, {
         method: "POST",
-        headers: headers(),
-        body: JSON.stringify({ workText }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workText: text }),
       });
+
+      if (!res.ok) {
+        Swal.fire("Error", "Server unreachable", "error");
+        return;
+      }
 
       const data = await res.json();
 
       if (data.success) {
-        Swal.fire("Success", "Work log submitted", "success");
-        setWorkText("");
-        loadMyLogs();
-        if (isAdmin) loadAllLogs();
+        Swal.fire("Success", data.message, "success");
+        setText("");
+        // Optional: reload logs
       } else {
         Swal.fire("Error", data.message, "error");
       }
     } catch (err) {
+      console.log("WorkLog submit error:", err);
       Swal.fire("Error", "Server error", "error");
     }
   };
 
-  if (!teamId) {
-    return (
-      <div className="p-3 text-muted">
-        No team selected.
-      </div>
-    );
-  }
-
   return (
-    <div className="container mt-4">
-      <h3 className="ts-page-title">Daily Work Log</h3>
+    <div className="ts-card p-4">
+      <h2 className="ts-page-title">Daily Work Log</h2>
 
-      {/* MEMBER FORM */}
-      {!isAdmin && (
-        <div className="ts-card p-3 mt-3 shadow-sm">
-          <h5>Submit Your Work</h5>
-          <textarea
-            rows="3"
-            className="form-control mt-2"
-            placeholder="Write what you did today..."
-            value={workText}
-            onChange={(e) => setWorkText(e.target.value)}
-          ></textarea>
-
-          <button className="btn btn-primary mt-3" onClick={submitWork}>
-            Submit Work
-          </button>
-        </div>
+      {!teamId && (
+        <p className="text-muted mt-2">
+          Please select a team from Dashboard → click on a team name.
+        </p>
       )}
 
-      {/* MEMBER LOGS */}
-      <div className="ts-card p-3 mt-4 shadow-sm">
-        <h5>Your Work Logs</h5>
+      {teamId && (
+        <>
+          <textarea
+            className="form-control mt-3"
+            rows="4"
+            placeholder="Write what you worked on today..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
 
-        {loading ? (
-          <p className="text-muted mt-2">Loading...</p>
-        ) : myLogs.length === 0 ? (
-          <p className="text-muted mt-2">No logs submitted yet.</p>
-        ) : (
-          <ul className="list-group mt-3">
-            {myLogs.map((log) => (
-              <li className="list-group-item" key={log._id}>
-                <div className="d-flex justify-content-between">
-                  <span>{log.workText}</span>
-                  <small className="text-muted">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </small>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+          <button className="btn btn-success mt-3" onClick={handleSubmit}>
+            Submit today&apos;s log
+          </button>
 
-      {/* ADMIN ALL LOGS */}
-      {isAdmin && (
-        <div className="ts-card p-3 mt-4 shadow-sm">
-          <h5>All Team Logs</h5>
-
-          {allLogs.length === 0 ? (
-            <p className="text-muted mt-2">No logs yet.</p>
+          <h5 className="mt-4">My previous logs</h5>
+          {myLogs.length === 0 ? (
+            <p className="text-muted mt-1">No logs yet.</p>
           ) : (
-            <ul className="list-group mt-3">
-              {allLogs.map((log) => (
-                <li className="list-group-item" key={log._id}>
-                  <div>
-                    <b>{log.user.fullName}</b> —{" "}
-                    <small className="text-muted">{log.user.email}</small>
-                  </div>
-
-                  <div className="mt-2">{log.workText}</div>
-
-                  <div className="mt-1 text-muted" style={{ fontSize: 12 }}>
-                    {new Date(log.createdAt).toLocaleString()}
-                  </div>
+            <ul className="mt-2">
+              {myLogs.map((log) => (
+                <li key={log._id} style={{ marginBottom: 6 }}>
+                  <b>{log.date}</b> — {log.workText}
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </>
       )}
     </div>
   );
