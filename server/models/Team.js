@@ -13,7 +13,8 @@ const teamSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
+    }, 
+    
 
     // Admin of the team
     admin: {
@@ -37,6 +38,11 @@ const teamSchema = new mongoose.Schema(
         ref: "User",
       }
     ],
+    inviteToken: {
+  type: String,
+  default: null,
+},
+
   },
   { timestamps: true }
 );

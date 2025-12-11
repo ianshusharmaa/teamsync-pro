@@ -5,82 +5,81 @@ import authMiddleware from "../middleware/auth.js";
 
 const router = express.Router();
 
-/* ---------------------------------------------
-   GET NOTICES FOR A TEAM (TEAM MEMBERS ONLY)
---------------------------------------------- */
-router.get("/:teamId", authMiddleware, async (req, res) => {
-  try {
-    const { teamId } = req.params;
-
-    const team = await Team.findById(teamId);
-
-    if (!team) {
-      return res.json({ success: false, message: "Team not found" });
-    }
-
-    // allow only members or admin to view notices
-    const isMember =
-      team.members.map(String).includes(req.user.id) ||
-      team.admin.toString() === req.user.id;
-
-    if (!isMember) {
-      return res.json({ success: false, message: "Not allowed" });
-    }
-
-    const notices = await Notice.find({ team: teamId })
-      .populate("createdBy", "fullName email")
-      .sort({ createdAt: -1 });
-
-    return res.json({
-      success: true,
-      notices,
-    });
-  } catch (err) {
-    console.log("Get Notices Error:", err);
-    return res.json({ success: false, message: "Server error" });
-  }
-});
-
-/* ---------------------------------------------
-   CREATE NOTICE (ADMIN ONLY)
---------------------------------------------- */
+// Create Notice (Admin only)
 router.post("/:teamId", authMiddleware, async (req, res) => {
   try {
     const { teamId } = req.params;
     const { title, message } = req.body;
 
-    const team = await Team.findById(teamId);
-
-    if (!team) {
-      return res.json({ success: false, message: "Team not found" });
-    }
-
-    // only team admin can create notices
-    if (team.admin.toString() !== req.user.id) {
-      return res.json({ success: false, message: "Only admin can post notices" });
-    }
-
     if (!title || !message) {
-      return res.json({
-        success: false,
-        message: "Title and message are required",
-      });
+      return res.json({ success: false, message: "Missing fields" });
     }
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.json({ success: false, message: "Team not found" });
+
+    const isAdmin = team.admin.toString() === req.user.id;
+    if (!isAdmin) return res.json({ success: false, message: "Not allowed" });
 
     const notice = await Notice.create({
       team: teamId,
       title,
       message,
-      createdBy: req.user.id,
+      createdBy: req.user.id
     });
 
-    return res.json({
-      success: true,
-      message: "Notice posted successfully",
-      notice,
-    });
+    return res.json({ success: true, message: "Notice posted", notice });
   } catch (err) {
-    console.log("Create Notice Error:", err);
+    console.log(err);
+    return res.json({ success: false, message: "Server error" });
+  }
+});
+
+// Get Notices (Member + Admin)
+router.get("/:teamId", authMiddleware, async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.json({ success: false, message: "Team not found" });
+
+    const isMember =
+      team.members.map(String).includes(req.user.id) ||
+      team.admin.toString() === req.user.id;
+
+    if (!isMember)
+      return res.json({ success: false, message: "Access denied" });
+
+    const notices = await Notice.find({ team: teamId })
+      .populate("createdBy", "fullName")
+      .sort({ createdAt: -1 });
+
+    return res.json({ success: true, notices });
+  } catch (err) {
+    console.log(err);
+    return res.json({ success: false, message: "Server error" });
+  }
+});
+
+// Delete Notice (Admin only)
+router.delete("/:noticeId", authMiddleware, async (req, res) => {
+  try {
+    const { noticeId } = req.params;
+
+    const notice = await Notice.findById(noticeId);
+    if (!notice) return res.json({ success: false, message: "Not found" });
+
+    const team = await Team.findById(notice.team);
+    const isAdmin = team.admin.toString() === req.user.id;
+
+    if (!isAdmin)
+      return res.json({ success: false, message: "Not allowed" });
+
+    await notice.deleteOne();
+
+    return res.json({ success: true, message: "Notice deleted" });
+  } catch (err) {
+    console.log(err);
     return res.json({ success: false, message: "Server error" });
   }
 });

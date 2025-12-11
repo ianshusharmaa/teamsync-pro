@@ -8,6 +8,7 @@ function Sidebar({ activeItem, onSelect }) {
     { id: "teamDetails", label: "Team Details" },
     { id: "chat", label: "Team Chat" },
     { id: "worklog", label: "Work Logs" },
+    { id: "notice", label: "Notice Board" },
   ];
 
   return (

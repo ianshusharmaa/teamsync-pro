@@ -8,6 +8,7 @@ import TeamDetails from "../pages/TeamDetails";
 import WorkLog from "../pages/WorkLog";
 import ChatPage from "../pages/ChatPage";
 import Swal from "sweetalert2";
+import NoticeBoard from "../pages/NoticeBoard";
 
 function MainLayout() {
   const [activePage, setActivePage] = useState("dashboard");
@@ -31,7 +32,7 @@ function MainLayout() {
   }, []);
 
   // handle sidebar click
-  const handleSelect = (page) => {
+  const handleSelect = (page) => { 
     if (
       (page === "teamDetails" || page === "chat" || page === "worklog") &&
       !selectedTeamId
@@ -73,7 +74,11 @@ function MainLayout() {
 
           {activePage === "chat" && (
             <ChatPage teamId={selectedTeamId} />
+          )} 
+          {activePage === "notice" && (
+             <NoticeBoard teamId={selectedTeamId} />
           )}
+            
 
           {activePage !== "dashboard" &&
             activePage !== "calendar" &&
