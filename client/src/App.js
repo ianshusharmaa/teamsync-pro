@@ -5,6 +5,8 @@ import Signup from "./pages/Signup";
 import MainLayout from "./layouts/MainLayout";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyLink from "./pages/VerifyLink";
+import NoticeBoard from "./pages/NoticeBoard";
+import InviteJoin from "./pages/InviteJoin";
 
 function App() {
   // state
@@ -26,6 +28,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify-email/:token" element={<VerifyLink />} />
+        <Route path="/team-notice" element={<NoticeBoard />} />
+        <Route path="/invite/:token" element={<InviteJoin />} />
 
         {/* main app */}
         <Route
