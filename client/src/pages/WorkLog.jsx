@@ -2,28 +2,26 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
-function WorkLog() {
-  const [teamId, setTeamId] = useState("");
+function WorkLog({ teamId }) {
+  // local team id
+  const [currentTeamId, setCurrentTeamId] = useState(teamId || "");
   const [text, setText] = useState("");
   const [myLogs, setMyLogs] = useState([]);
 
-  // load selected team id
+  // update when prop changes
   useEffect(() => {
-    const storedTeamId = localStorage.getItem("selectedTeamId");
-    if (storedTeamId) {
-      setTeamId(storedTeamId);
-    }
-  }, []);
+    setCurrentTeamId(teamId || "");
+  }, [teamId]);
 
-  // load my logs
+  // load my logs when team changes
   useEffect(() => {
-    if (!teamId) return;
+    if (!currentTeamId) return;
 
     const loadLogs = async () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          `${API_BASE_URL}/api/worklog/${teamId}/my`,
+          `${API_BASE_URL}/api/worklog/${currentTeamId}/my`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -48,7 +46,7 @@ function WorkLog() {
     };
 
     loadLogs();
-  }, [teamId]);
+  }, [currentTeamId]);
 
   // submit today's log
   const handleSubmit = async () => {
@@ -56,14 +54,14 @@ function WorkLog() {
       Swal.fire("Error", "Please write your work first", "error");
       return;
     }
-    if (!teamId) {
+    if (!currentTeamId) {
       Swal.fire("Error", "Please select a team first", "error");
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/worklog/${teamId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/worklog/${currentTeamId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +80,17 @@ function WorkLog() {
       if (data.success) {
         Swal.fire("Success", data.message, "success");
         setText("");
-        // Optional: reload logs
+        // reload logs
+        const refreshRes = await fetch(
+          `${API_BASE_URL}/api/worklog/${currentTeamId}/my`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          if (refreshData.success) setMyLogs(refreshData.logs || []);
+        }
       } else {
         Swal.fire("Error", data.message, "error");
       }
@@ -96,13 +104,13 @@ function WorkLog() {
     <div className="ts-card p-4">
       <h2 className="ts-page-title">Daily Work Log</h2>
 
-      {!teamId && (
+      {!currentTeamId && (
         <p className="text-muted mt-2">
           Please select a team from Dashboard → click on a team name.
         </p>
       )}
 
-      {teamId && (
+      {currentTeamId && (
         <>
           <textarea
             className="form-control mt-3"
@@ -113,7 +121,7 @@ function WorkLog() {
           />
 
           <button className="btn btn-success mt-3" onClick={handleSubmit}>
-            Submit today&apos;s log
+            Submit today's log
           </button>
 
           <h5 className="mt-4">My previous logs</h5>
@@ -123,7 +131,7 @@ function WorkLog() {
             <ul className="mt-2">
               {myLogs.map((log) => (
                 <li key={log._id} style={{ marginBottom: 6 }}>
-                  <b>{log.date}</b> — {log.workText}
+                  <b>{new Date(log.createdAt).toLocaleDateString()}</b> — {log.workText}
                 </li>
               ))}
             </ul>

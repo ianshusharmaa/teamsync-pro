@@ -3,7 +3,7 @@ import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
 function Dashboard() {
-  // state
+  // simple UI state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [teamName, setTeamName] = useState("");
@@ -12,31 +12,39 @@ function Dashboard() {
   const [userName, setUserName] = useState("");
   const [myTeams, setMyTeams] = useState([]);
 
-  // load user
+  // load user name
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUserName(JSON.parse(stored).fullName);
   }, []);
 
-  // load teams
+  // load teams on mount
   useEffect(() => {
     fetchTeams();
   }, []);
 
+  // fetch teams for this user (correct route)
   const fetchTeams = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/team/my-teams`, {
+      const res = await fetch(`${API_BASE_URL}/api/team/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // if non-OK, log and return
+      if (!res.ok) {
+        console.log("Fetch teams HTTP status:", res.status);
+        return;
+      }
+
       const data = await res.json();
-      if (data.success) setMyTeams(data.teams);
+      if (data.success) setMyTeams(data.teams || []);
     } catch (err) {
-      console.log(err);
+      console.log("Fetch teams error:", err);
     }
   };
 
-  // generate code
+  // generate a team code
   const generateTeamCode = () => {
     const random = Math.floor(10000 + Math.random() * 90000);
     return `TS-${random}`;
@@ -81,6 +89,7 @@ function Dashboard() {
                 style={{ cursor: "pointer", marginBottom: 8 }}
                 onClick={() => {
                   localStorage.setItem("selectedTeamId", team._id);
+                  // notify layout to open team details
                   window.dispatchEvent(new Event("openTeamDetails"));
                 }}
               >
@@ -146,6 +155,11 @@ function Dashboard() {
                         teamCode: code,
                       }),
                     });
+
+                    if (!res.ok) {
+                      Swal.fire("Error", "Server unreachable", "error");
+                      return;
+                    }
 
                     const data = await res.json();
 
@@ -215,6 +229,11 @@ function Dashboard() {
                       },
                       body: JSON.stringify({ teamCode: joinCode }),
                     });
+
+                    if (!res.ok) {
+                      Swal.fire("Error", "Server unreachable", "error");
+                      return;
+                    }
 
                     const data = await res.json();
 

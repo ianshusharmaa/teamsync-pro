@@ -2,34 +2,30 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
-function ChatPage() {
-  // team, messages, input
-  const [teamId, setTeamId] = useState("");
+function ChatPage({ teamId }) {
+  // local copy of teamId
+  const [currentTeamId, setCurrentTeamId] = useState(teamId || "");
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
 
-  // load selected team id from localStorage
+  // update when prop changes
   useEffect(() => {
-    const storedTeamId = localStorage.getItem("selectedTeamId");
-    if (storedTeamId) {
-      setTeamId(storedTeamId);
-    }
-  }, []);
+    setCurrentTeamId(teamId || "");
+  }, [teamId]);
 
-  // load messages periodically
+  // load messages periodically when team selected
   useEffect(() => {
-    if (!teamId) return;
+    if (!currentTeamId) return;
 
     const loadMessages = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/api/chat/${teamId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/chat/${currentTeamId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // 404 / HTML aaya to JSON parse mat karo
         if (!res.ok) {
           console.log("Chat HTTP status:", res.status);
           return;
@@ -49,7 +45,7 @@ function ChatPage() {
     loadMessages();
     const intervalId = setInterval(loadMessages, 5000);
     return () => clearInterval(intervalId);
-  }, [teamId]);
+  }, [currentTeamId]);
 
   // send message
   const handleSend = async () => {
@@ -57,14 +53,14 @@ function ChatPage() {
       Swal.fire("Error", "Message cannot be empty", "error");
       return;
     }
-    if (!teamId) {
+    if (!currentTeamId) {
       Swal.fire("Error", "Please select a team first", "error");
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/chat/${teamId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/chat/${currentTeamId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +76,7 @@ function ChatPage() {
 
       const data = await res.json();
       if (data.success) {
-        // optimistically UI update
+        // optimistic update
         setMessages((prev) => [
           ...prev,
           {
@@ -104,13 +100,13 @@ function ChatPage() {
     <div className="ts-card p-4">
       <h2 className="ts-page-title">Team Chat</h2>
 
-      {!teamId && (
+      {!currentTeamId && (
         <p className="text-muted mt-2">
           Please select a team from Dashboard → click on a team name.
         </p>
       )}
 
-      {teamId && (
+      {currentTeamId && (
         <>
           <div
             style={{
@@ -124,9 +120,7 @@ function ChatPage() {
               background: "#f9fafb",
             }}
           >
-            {messages.length === 0 && (
-              <p className="text-muted">No messages yet.</p>
-            )}
+            {messages.length === 0 && <p className="text-muted">No messages yet.</p>}
 
             {messages.map((m) => (
               <div key={m._id || Math.random()} style={{ marginBottom: 8 }}>
@@ -135,9 +129,7 @@ function ChatPage() {
                 </div>
                 <div style={{ fontSize: 14 }}>{m.text}</div>
                 <div style={{ fontSize: 11, color: "#6b7280" }}>
-                  {m.createdAt
-                    ? new Date(m.createdAt).toLocaleString()
-                    : ""}
+                  {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
                 </div>
                 <hr />
               </div>
