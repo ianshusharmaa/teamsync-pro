@@ -1,110 +1,93 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function Navbar() {
-  // state
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-
-  // user data
   const user = JSON.parse(localStorage.getItem("user"));
+  const [open, setOpen] = useState(false);
 
-  // logout
+  // logout handler
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-    window.location.reload();
+    Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+    }).then((res) => {
+      if (res.isConfirmed) {
+        localStorage.clear();
+        window.location.href = "/";
+      }
+    });
   };
 
   return (
     <div
       style={{
         height: "60px",
-        background: "linear-gradient(90deg,#2563EB,#1E40AF)",
+        background: "#ffffff",
+        borderBottom: "1px solid #E5E7EB",
+        padding: "0 24px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "0 24px",
-        color: "white",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
       }}
     >
       {/* app name */}
-      <h4 style={{ margin: 0, fontWeight: 600 }}>TeamSync Pro</h4>
+      <h4 style={{ margin: 0, color: "#2563EB", fontWeight: 700 }}>
+        TeamSync Pro
+      </h4>
 
-      {/* user menu */}
+      {/* user dropdown */}
       <div style={{ position: "relative" }}>
         <div
           onClick={() => setOpen(!open)}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
             cursor: "pointer",
-            background: "rgba(255,255,255,0.15)",
-            padding: "8px 14px",
-            borderRadius: "30px",
-            transition: "0.3s",
+            fontWeight: 600,
+            color: "#374151",
           }}
         >
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              background: "#DBEAFE",
-              color: "#1E40AF",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-            }}
-          >
-            {user?.fullName?.charAt(0) || "U"}
-          </div>
-
-          <span style={{ fontSize: 14 }}>{user?.fullName}</span>
+          Logged in as {user?.fullName || "User"} ⌄
         </div>
 
-        {/* dropdown */}
         {open && (
           <div
             style={{
               position: "absolute",
               right: 0,
-              top: "50px",
+              top: "40px",
               width: "200px",
-              background: "white",
-              color: "#111827",
+              background: "#ffffff",
+              border: "1px solid #E5E7EB",
               borderRadius: "10px",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
               overflow: "hidden",
-              animation: "fadeIn 0.2s ease",
+              zIndex: 10,
             }}
           >
-            <div style={{ padding: "12px", borderBottom: "1px solid #E5E7EB" }}>
-              <b>{user?.fullName}</b>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: 0 }}>
-                {user?.email}
-              </p>
-            </div>
-
             <div
-              onClick={() => {
-                setOpen(false);
-                navigate("/app/settings");
+              style={{
+                padding: "12px 16px",
+                cursor: "pointer",
+                borderBottom: "1px solid #E5E7EB",
               }}
-              style={menuItem}
+              onClick={() =>
+                Swal.fire("Settings", "Settings page coming soon", "info")
+              }
             >
-              ⚙️ Settings
+              ⚙ Settings
             </div>
 
             <div
+              style={{
+                padding: "12px 16px",
+                cursor: "pointer",
+                color: "#DC2626",
+                fontWeight: 600,
+              }}
               onClick={handleLogout}
-              style={{ ...menuItem, color: "#DC2626" }}
             >
               🚪 Logout
             </div>
@@ -114,13 +97,5 @@ function Navbar() {
     </div>
   );
 }
-
-// menu item style
-const menuItem = {
-  padding: "12px 16px",
-  cursor: "pointer",
-  transition: "0.2s",
-  fontSize: 14,
-};
 
 export default Navbar;
