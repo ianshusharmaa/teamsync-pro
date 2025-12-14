@@ -13,7 +13,6 @@ function Navbar() {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, logout",
-      cancelButtonText: "Cancel",
     }).then((res) => {
       if (res.isConfirmed) {
         localStorage.clear();
@@ -23,72 +22,27 @@ function Navbar() {
   };
 
   return (
-    <div
-      style={{
-        height: "60px",
-        background: "#ffffff",
-        borderBottom: "1px solid #E5E7EB",
-        padding: "0 24px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      {/* app name */}
-      <h4 style={{ margin: 0, color: "#2563EB", fontWeight: 700 }}>
-        TeamSync Pro
-      </h4>
+    <div style={navStyle}>
+      <h3 style={{ color: "#2563EB" }}>TeamSync Pro</h3>
 
-      {/* user dropdown */}
-      <div style={{ position: "relative" }}>
-        <div
-          onClick={() => setOpen(!open)}
-          style={{
-            cursor: "pointer",
-            fontWeight: 600,
-            color: "#374151",
-          }}
-        >
-          Logged in as {user?.fullName || "User"} ⌄
+      {/* profile box */}
+      <div style={profileWrap}>
+        <div style={profileBtn} onClick={() => setOpen(!open)}>
+          <div style={avatar}>{user?.fullName?.[0]}</div>
+          <span>{user?.fullName}</span>
         </div>
 
+        {/* dropdown */}
         {open && (
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "40px",
-              width: "200px",
-              background: "#ffffff",
-              border: "1px solid #E5E7EB",
-              borderRadius: "10px",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-              overflow: "hidden",
-              zIndex: 10,
-            }}
-          >
+          <div style={dropdown} className="fade-in">
             <div
-              style={{
-                padding: "12px 16px",
-                cursor: "pointer",
-                borderBottom: "1px solid #E5E7EB",
-              }}
-              onClick={() =>
-                Swal.fire("Settings", "Settings page coming soon", "info")
-              }
+              style={dropItem}
+              onClick={() => (window.location.href = "/app/settings")}
             >
               ⚙ Settings
             </div>
 
-            <div
-              style={{
-                padding: "12px 16px",
-                cursor: "pointer",
-                color: "#DC2626",
-                fontWeight: 600,
-              }}
-              onClick={handleLogout}
-            >
+            <div style={dropItem} onClick={handleLogout}>
               🚪 Logout
             </div>
           </div>
@@ -97,5 +51,57 @@ function Navbar() {
     </div>
   );
 }
+
+/* styles */
+const navStyle = {
+  height: 60,
+  background: "#fff",
+  padding: "0 24px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  borderBottom: "1px solid #E5E7EB",
+};
+
+const profileWrap = {
+  position: "relative",
+};
+
+const profileBtn = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  cursor: "pointer",
+  fontWeight: 500,
+};
+
+const avatar = {
+  width: 36,
+  height: 36,
+  borderRadius: "50%",
+  background: "#2563EB",
+  color: "white",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 700,
+};
+
+const dropdown = {
+  position: "absolute",
+  right: 0,
+  top: 48,
+  background: "#fff",
+  borderRadius: 10,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+  overflow: "hidden",
+  minWidth: 160,
+};
+
+const dropItem = {
+  padding: "12px 16px",
+  cursor: "pointer",
+  borderBottom: "1px solid #f1f1f1",
+};
 
 export default Navbar;

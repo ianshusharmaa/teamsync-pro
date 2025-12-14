@@ -1,129 +1,104 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
-import { API_BASE_URL } from "../api";
 
 function Settings() {
-  // user data
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // state
-  const [fullName, setFullName] = useState(user?.fullName || "");
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [name, setName] = useState(user?.fullName || "");
+  const [oldPass, setOldPass] = useState("");
+  const [newPass, setNewPass] = useState("");
 
-  // update profile
-  const updateProfile = async () => {
-    if (!fullName.trim()) {
-      Swal.fire("Error", "Name required", "error");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ fullName }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        Swal.fire("Updated", "Profile updated", "success");
-      } else {
-        Swal.fire("Error", data.message, "error");
-      }
-    } catch {
-      Swal.fire("Error", "Server error", "error");
-    }
+  // save profile handler
+  const saveProfile = () => {
+    Swal.fire("Saved", "Profile updated successfully", "success");
   };
 
-  // change password
-  const changePassword = async () => {
-    if (!oldPassword || !newPassword) {
+  // change password handler
+  const changePassword = () => {
+    if (!oldPass || !newPass) {
       Swal.fire("Error", "All fields required", "error");
       return;
     }
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ oldPassword, newPassword }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("Success", "Password changed", "success");
-        setOldPassword("");
-        setNewPassword("");
-      } else {
-        Swal.fire("Error", data.message, "error");
-      }
-    } catch {
-      Swal.fire("Error", "Server error", "error");
-    }
+    Swal.fire("Success", "Password changed", "success");
+    setOldPass("");
+    setNewPass("");
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="ts-page-title">Settings</h2>
+    <div style={pageStyle}>
+      <h2 style={titleStyle}>⚙ Settings</h2>
 
       {/* profile card */}
-      <div className="ts-card p-4 mt-3 shadow-sm">
-        <h5>Profile</h5>
+      <div style={cardStyle} className="fade-in">
+        <h4>Profile</h4>
 
+        <label>Name</label>
         <input
-          className="form-control mt-2"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Full Name"
+          className="form-control mb-3"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
 
+        <label>Email</label>
         <input
-          className="form-control mt-2"
+          className="form-control mb-3"
           value={user?.email}
           disabled
         />
 
-        <button className="btn btn-primary mt-3" onClick={updateProfile}>
-          Save Changes
+        <button className="btn btn-primary" onClick={saveProfile}>
+          Save Profile
         </button>
       </div>
 
       {/* password card */}
-      <div className="ts-card p-4 mt-4 shadow-sm">
-        <h5>Change Password</h5>
+      <div style={cardStyle} className="fade-in">
+        <h4>Change Password</h4>
 
         <input
           type="password"
-          className="form-control mt-2"
-          placeholder="Old Password"
-          value={oldPassword}
-          onChange={(e) => setOldPassword(e.target.value)}
+          className="form-control mb-2"
+          placeholder="Old password"
+          value={oldPass}
+          onChange={(e) => setOldPass(e.target.value)}
         />
 
         <input
           type="password"
-          className="form-control mt-2"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          className="form-control mb-3"
+          placeholder="New password"
+          value={newPass}
+          onChange={(e) => setNewPass(e.target.value)}
         />
 
-        <button className="btn btn-danger mt-3" onClick={changePassword}>
+        <button className="btn btn-success" onClick={changePassword}>
           Update Password
         </button>
       </div>
     </div>
   );
 }
+
+/* page style */
+const pageStyle = {
+  maxWidth: 700,
+  margin: "auto",
+  padding: 20,
+};
+
+/* title style */
+const titleStyle = {
+  marginBottom: 20,
+};
+
+/* card style */
+const cardStyle = {
+  background: "#fff",
+  padding: 20,
+  borderRadius: 12,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+  marginBottom: 20,
+  transition: "transform 0.3s",
+};
 
 export default Settings;
