@@ -7,6 +7,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import VerifyLink from "./pages/VerifyLink";
 import NoticeBoard from "./pages/NoticeBoard";
 import InviteJoin from "./pages/InviteJoin";
+import Settings from "./pages/Settings";
 
 function App() {
   // state
@@ -30,6 +31,8 @@ function App() {
         <Route path="/verify-email/:token" element={<VerifyLink />} />
         <Route path="/team-notice" element={<NoticeBoard />} />
         <Route path="/invite/:token" element={<InviteJoin />} />
+        <Route path="/app/settings" element={<Settings />} />
+
 
         {/* main app */}
         <Route
