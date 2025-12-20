@@ -2,217 +2,120 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { API_BASE_URL } from "../api";
 
-// fixed indian holidays
-const INDIAN_HOLIDAYS = {
-  "01-26": "Republic Day",
-  "08-15": "Independence Day",
-  "10-02": "Gandhi Jayanti",
-};
-
 function CalendarPage() {
-  const today = new Date();
-  const [month, setMonth] = useState(today.getMonth());
-  const [year, setYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [holidays, setHolidays] = useState({});
-  const [logs, setLogs] = useState([]);
-  const [notices, setNotices] = useState([]);
-
   const teamId = localStorage.getItem("selectedTeamId");
+  const token = localStorage.getItem("token");
 
-  // load saved holidays
-  useEffect(() => {
-    const saved = localStorage.getItem("calendarHolidays");
-    if (saved) setHolidays(JSON.parse(saved));
-  }, []);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [notices, setNotices] = useState([]);
+  const [holidays, setHolidays] = useState([]);
 
-  // save holidays
-  useEffect(() => {
-    localStorage.setItem("calendarHolidays", JSON.stringify(holidays));
-  }, [holidays]);
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const monthName = new Date(year, month).toLocaleString("default", {
-    month: "long",
-  });
+  // stop if team not selected
+  useEffect(() => {
+    if (!teamId) {
+      Swal.fire("Select team", "Please select a team first", "info");
+    }
+  }, [teamId]);
 
-  // check today
-  const isToday = (d) =>
-    d === today.getDate() &&
-    month === today.getMonth() &&
-    year === today.getFullYear();
-
-  // weekend check
-  const isWeekend = (dayIndex) => dayIndex === 0 || dayIndex === 6;
-
-  // indian holiday check
-  const indianHoliday = (d) => {
-    const key = `${String(month + 1).padStart(2, "0")}-${String(d).padStart(
-      2,
-      "0"
-    )}`;
-    return INDIAN_HOLIDAYS[key];
-  };
-
-  // toggle holiday
-  const toggleHoliday = (key) => {
-    Swal.fire({
-      title: holidays[key] ? "Remove holiday?" : "Mark as holiday?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes",
-    }).then((res) => {
-      if (res.isConfirmed) {
-        setHolidays((prev) => {
-          const copy = { ...prev };
-          copy[key] ? delete copy[key] : (copy[key] = true);
-          return copy;
-        });
-      }
-    });
-  };
-
-  // load logs + notices for selected date
-  const loadSummary = async (dateStr) => {
+  // load holidays
+  useEffect(() => {
     if (!teamId) return;
 
-    const token = localStorage.getItem("token");
+    fetch(`${API_BASE_URL}/api/calendar/${teamId}/holidays`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d?.success && setHolidays(d.holidays || []))
+      .catch(() => {});
+  }, [month, year, teamId]);
 
-    try {
-      const logRes = await fetch(
-        `${API_BASE_URL}/api/worklog/${teamId}/all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const logData = await logRes.json();
+  // date click
+  const handleDateClick = (day) => {
+    if (!teamId) return;
 
-      if (logData.success) {
-        setLogs(
-          logData.logs.filter((l) => l.date === dateStr)
-        );
-      }
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
 
-      const noticeRes = await fetch(
-        `${API_BASE_URL}/api/notice/${teamId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const noticeData = await noticeRes.json();
+    setSelectedDate(dateStr);
 
-      if (noticeData.success) {
-        setNotices(
-          noticeData.notices.filter(
-            (n) =>
-              new Date(n.createdAt).toISOString().split("T")[0] === dateStr
-          )
-        );
-      }
-    } catch (err) {
-      console.log("Summary load error", err);
-    }
+    fetch(`${API_BASE_URL}/api/calendar/${teamId}/${dateStr}/notices`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d?.success && setNotices(d.notices || []))
+      .catch(() => {});
+  };
+
+  const changeMonth = (val) => {
+    setCurrentDate(new Date(year, month + val, 1));
+    setSelectedDate(null);
+    setNotices([]);
   };
 
   return (
     <div className="ts-card p-4">
-      <h2 className="ts-page-title">Calendar</h2>
+      <h2 className="ts-page-title">Team Calendar</h2>
 
-      {/* month header */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => setMonth(month === 0 ? 11 : month - 1)}
-        >
-          ◀
-        </button>
-
-        <h4>{monthName} {year}</h4>
-
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => setMonth(month === 11 ? 0 : month + 1)}
-        >
-          ▶
-        </button>
-      </div>
-
-      {/* weekdays */}
-      <div className="d-grid" style={{ gridTemplateColumns: "repeat(7,1fr)" }}>
-        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
-          <div key={d} className="text-center fw-bold">{d}</div>
-        ))}
+      {/* header */}
+      <div style={header}>
+        <button onClick={() => changeMonth(-1)}>◀</button>
+        <h4>
+          {currentDate.toLocaleString("default", { month: "long" })} {year}
+        </h4>
+        <button onClick={() => changeMonth(1)}>▶</button>
       </div>
 
       {/* calendar */}
-      <div
-        className="mt-2"
-        style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 8 }}
-      >
-        {[...Array(firstDay)].map((_, i) => <div key={i} />)}
+      <div style={grid}>
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+          <div key={d} style={week}>{d}</div>
+        ))}
 
-        {[...Array(daysInMonth)].map((_, i) => {
-          const date = i + 1;
-          const dayIndex = (firstDay + i) % 7;
-          const key = `${year}-${month + 1}-${date}`;
-          const dateStr = `${year}-${String(month + 1).padStart(2,"0")}-${String(date).padStart(2,"0")}`;
+        {Array(firstDay).fill(0).map((_, i) => (
+          <div key={i}></div>
+        ))}
 
-          let bg = "#fff";
-          if (isWeekend(dayIndex)) bg = "#FEE2E2";
-          if (holidays[key] || indianHoliday(date)) bg = "#FECACA";
-          if (isToday(date)) bg = "#DBEAFE";
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const dateStr = `${year}-${String(month + 1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+          const isHoliday = holidays.includes(dateStr);
+          const isToday = new Date().toDateString() === new Date(year,month,day).toDateString();
 
           return (
             <div
-              key={key}
-              onClick={() => {
-                setSelectedDate(dateStr);
-                loadSummary(dateStr);
-                toggleHoliday(key);
-              }}
+              key={day}
+              onClick={() => handleDateClick(day)}
               style={{
-                height: 80,
-                padding: 8,
-                borderRadius: 10,
-                background: bg,
-                border: "1px solid #E5E7EB",
-                cursor: "pointer",
+                ...dayBox,
+                background: isHoliday ? "#FEE2E2" : isToday ? "#DBEAFE" : "#fff",
               }}
             >
-              <b>{date}</b>
-              {indianHoliday(date) && (
-                <div style={{ fontSize: 11, color: "#991B1B" }}>
-                  {indianHoliday(date)}
-                </div>
-              )}
+              {day}
             </div>
           );
         })}
       </div>
 
-      {/* summary */}
+      {/* notice section */}
       {selectedDate && (
-        <div className="ts-card p-3 mt-4">
-          <h5>Summary for {selectedDate}</h5>
+        <div className="mt-4">
+          <h4>{selectedDate}</h4>
 
-          <h6 className="mt-3">Work Logs</h6>
-          {logs.length === 0 ? (
-            <p className="text-muted">No work logs</p>
-          ) : (
-            logs.map((l) => (
-              <div key={l._id} className="border p-2 mb-2 rounded">
-                <b>{l.user.fullName}</b>
-                <div>{l.workText}</div>
-              </div>
-            ))
-          )}
-
-          <h6 className="mt-3">Notices</h6>
           {notices.length === 0 ? (
-            <p className="text-muted">No notices</p>
+            <p className="text-muted">No notice for this day</p>
           ) : (
-            notices.map((n) => (
-              <div key={n._id} className="border p-2 mb-2 rounded">
+            notices.map(n => (
+              <div key={n._id} style={noticeBox}>
                 <b>{n.title}</b>
-                <div>{n.message}</div>
+                <p>{n.message}</p>
               </div>
             ))
           )}
@@ -221,5 +124,41 @@ function CalendarPage() {
     </div>
   );
 }
+
+/* styles */
+const header = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 16,
+};
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, 1fr)",
+  gap: 10,
+};
+
+const week = {
+  textAlign: "center",
+  fontWeight: 600,
+};
+
+const dayBox = {
+  height: 70,
+  border: "1px solid #E5E7EB",
+  borderRadius: 10,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+};
+
+const noticeBox = {
+  border: "1px solid #E5E7EB",
+  borderRadius: 8,
+  padding: 10,
+  marginBottom: 8,
+};
 
 export default CalendarPage;

@@ -7,6 +7,9 @@ import teamRoutes from "./routes/team.js";
 import noticeRoutes from "./routes/notice.js";
 import workLogRoutes from "./routes/worklog.js";
 import chatRoutes from "./routes/chat.js";
+import notificationRoutes from "./routes/notification.js";
+import calendarRoutes from "./routes/calendar.js";
+
 
 dotenv.config();
 
@@ -20,6 +23,9 @@ app.use("/api/team", teamRoutes);
 app.use("/api/notice", noticeRoutes);
 app.use("/api/worklog", workLogRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notification", notificationRoutes);
+app.use("/api/calendar", calendarRoutes);
+
 
 // default
 app.get("/", (req, res) => {
