@@ -46,7 +46,7 @@ function CalendarPage() {
 
     setSelectedDate(dateStr);
 
-    fetch(`${API_BASE_URL}/api/calendar/${teamId}/${dateStr}/notices`, {
+    fetch(`${API_BASE_URL}/api/calendar/${teamId}/${dateStr}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.ok ? r.json() : null)
